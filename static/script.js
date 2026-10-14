@@ -18,7 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
         checkbox.addEventListener('change', atualizarTotal);
     });
 
-    // Intercepta o formulário para enviar via AJAX/Fetch ao Python
     form.addEventListener('submit', (e) => {
         e.preventDefault();
         
