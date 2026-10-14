@@ -1,3 +1,12 @@
+:root {
+    color-scheme: light;
+    --cor-texto: #252821;
+    --cor-suave: #686d64;
+    --cor-fundo: #f2f3ee;
+    --cor-borda: #e1e3dc;
+    --cor-superficie: #fff;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -6,158 +15,288 @@
 }
 
 body {
-    background-color: #f4f4f9;
-    color: #333;
-    padding-bottom: 80px; /* Espaço para o botão fixo */
+    min-height: 100vh;
+    padding-bottom: 100px;
+    color: var(--cor-texto);
+    background-color: var(--cor-fundo);
+    background-image: radial-gradient(#dfe1d9 0.7px, transparent 0.7px);
+    background-size: 18px 18px;
 }
 
 header {
-    background-color: var(--cor-primaria);
-    color: var(--cor-secundaria);
-    padding: 20px;
+    position: relative;
+    padding: 24px 20px;
+    color: #fff;
+    background: #252821;
     text-align: center;
     font-size: 24px;
-    font-weight: bold;
+    font-weight: 700;
+}
+
+header::after {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 4px;
+    background: var(--cor-primaria);
+    content: '';
 }
 
 .container {
-    max-width: 600px;
+    width: min(100%, 680px);
     margin: 0 auto;
-    padding: 15px;
+    padding: 24px 16px;
 }
 
+.container :checked{
+    border: 0.1rem solid green;
+}
 .card {
-    background: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    margin-bottom: 16px;
+    padding: 22px;
+    border: 1px solid var(--cor-borda);
+    border-radius: 8px;
+    background: var(--cor-superficie);
+    box-shadow: 0 5px 18px rgba(37, 40, 33, 0.045);
 }
 
 h2 {
-    font-size: 16px;
-    margin-bottom: 15px;
-    color: var(--cor-primaria);
-    border-bottom: 2px solid var(--cor-secundaria);
-    display: inline-block;
-    padding-bottom: 5px;
+    display: table;
+    margin-bottom: 18px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--cor-primaria);
+    color: var(--cor-texto);
+    font-size: 17px;
+    line-height: 1.35;
 }
 
-/* Checkboxes e Radios customizados */
-.opcoes-lista, .horarios-lista {
+.opcoes-lista,
+.horarios-lista {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
 
+.opcoes-lista label,
+.horarios-lista label {
+    border: 1px solid var(--cor-borda);
+    border-radius: 6px;
+    background: #fafbf8;
+    cursor: pointer;
+    transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.opcoes-lista label {
+    display: flex;
+    min-height: 50px;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+}
+
 .horarios-lista {
     flex-direction: row;
     flex-wrap: wrap;
-    margin-top: 15px;
-}
-
-.opcoes-lista label, .horarios-lista label {
-    display: block;
-    padding: 12px;
-    background: #f8f9fa;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: 0.2s;
+    margin-top: 14px;
 }
 
 .horarios-lista label {
-    flex: 1 1 30%;
-    text-align: center;
+    position: relative;
+    display: grid;
+    min-width: 84px;
+    min-height: 44px;
+    flex: 1 1 25%;
+    place-items: center;
+    padding: 10px;
+    font-weight: 600;
 }
 
-/* Esconde o input original */
-input[type="checkbox"], input[type="radio"] {
-    display: none;
+input[type="checkbox"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    clip-path: inset(50%);
 }
 
-/* Estilo quando selecionado */
-input[type="checkbox"]:checked + label,
-input[type="radio"]:checked + label,
-label:has(input:checked) {
-    background-color: var(--cor-primaria);
-    color: #fff;
+.horarios-lista input[type="radio"],
+.card-profissional input[type="radio"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    clip-path: inset(50%);
+}
+
+.opcoes-lista label:has(input:checked),
+.horarios-lista label:has(input:checked) {
     border-color: var(--cor-primaria);
+    background: color-mix(in srgb, var(--cor-primaria) 10%, white);
 }
 
-/* Profissionais */
+.opcoes-lista label:focus-within,
+.horarios-lista label:focus-within,
+.card-profissional:focus-within {
+    outline: 3px solid color-mix(in srgb, var(--cor-primaria) 35%, transparent);
+    outline-offset: 2px;
+}
+
 .profissionais-lista {
     display: flex;
-    gap: 15px;
+    gap: 12px;
     overflow-x: auto;
-    padding-bottom: 10px;
+    padding: 2px 2px 10px;
+    scrollbar-color: #c8cbc2 transparent;
 }
 
 .card-profissional {
     display: flex;
+    min-width: 96px;
     flex-direction: column;
     align-items: center;
     gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    color: var(--cor-suave);
     cursor: pointer;
-    opacity: 0.6;
-    transition: 0.3s;
+    transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
 }
 
 .card-profissional img {
+    width: 64px;
+    height: 64px;
+    border: 3px solid var(--cor-borda);
     border-radius: 50%;
-    width: 60px;
-    height: 60px;
     object-fit: cover;
-    border: 3px solid transparent;
+    transition: border-color 160ms ease;
 }
 
-label:has(input[name="barbeiro"]:checked) {
-    opacity: 1;
-    background-color: transparent;
-    color: inherit;
+.card-profissional:has(input:checked) {
+    border-color: color-mix(in srgb, var(--cor-primaria) 35%, white);
+    background: color-mix(in srgb, var(--cor-primaria) 8%, white);
+    color: var(--cor-texto);
 }
 
-label:has(input[name="barbeiro"]:checked) img {
-    border-color: var(--cor-secundaria);
+.card-profissional:has(input:checked) img {
+    border-color: var(--cor-primaria);
 }
 
-/* Inputs de texto */
-input[type="text"], input[type="tel"], input[type="date"] {
+input[type="text"],
+input[type="tel"],
+input[type="date"] {
     width: 100%;
-    padding: 12px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
+    min-height: 48px;
+    margin-bottom: 12px;
+    padding: 12px 14px;
+    border: 1px solid #d4d7ce;
+    border-radius: 6px;
+    outline: none;
+    background: #fff;
+    color: var(--cor-texto);
     font-size: 16px;
+    transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
-/* Rodapé Fixo */
+input[type="text"]::placeholder,
+input[type="tel"]::placeholder {
+    color: #858a80;
+}
+
+input[type="text"]:focus,
+input[type="tel"]:focus,
+input[type="date"]:focus {
+    border-color: var(--cor-primaria);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--cor-primaria) 18%, transparent);
+}
+
 .resumo-fixo {
     position: fixed;
+    z-index: 2;
+    right: 0;
     bottom: 0;
     left: 0;
-    width: 100%;
-    background: #fff;
-    padding: 15px 20px;
     display: flex;
-    justify-content: space-between;
+    min-height: 76px;
     align-items: center;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px max(16px, calc((100vw - 648px) / 2));
+    border-top: 1px solid var(--cor-borda);
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 -6px 24px rgba(37, 40, 33, 0.08);
+    backdrop-filter: blur(12px);
 }
 
 .total-valor {
-    font-size: 18px;
-    font-weight: bold;
-    color: var(--cor-primaria);
+    flex: 0 0 auto;
+    color: var(--cor-texto);
+    font-size: 16px;
+    font-weight: 700;
 }
 
 .btn-confirmar {
-    background-color: var(--cor-secundaria);
-    color: #fff; /* Ajustar de acordo com o contraste */
-    border: none;
-    padding: 12px 20px;
-    font-size: 16px;
-    border-radius: 8px;
-    font-weight: bold;
+    min-height: 46px;
+    padding: 11px 20px;
+    border: 0.1rem solid var(--cor-texto);
+    border-radius: 6px;
+    background: var(--cor-primaria);
+    color: var(--cor-texto);
+    font-size: 15px;
+    font-weight: 700;
     cursor: pointer;
+    transition: filter 160ms ease, transform 160ms ease;
+}
+
+.btn-confirmar:hover {
+    filter: brightness(0.92);
+    color: red;
+    border: 1px solid red;
+}
+
+.btn-confirmar:active {
+    transform: translateY(1px);
+}
+
+.btn-confirmar:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--cor-primaria) 40%, transparent);
+    outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 16px 12px;
+    }
+
+    .card {
+        padding: 18px 16px;
+    }
+
+    .resumo-fixo {
+        gap: 10px;
+        padding: 10px 12px max(10px, env(safe-area-inset-bottom));
+    }
+
+    .total-valor {
+        font-size: 14px;
+    }
+
+    .btn-confirmar {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
 }
