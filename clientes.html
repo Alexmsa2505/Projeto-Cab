@@ -1,0 +1,80 @@
+{% extends "admin/base.html" %}
+{% from "_macros.html" import csrf %}
+{% block titulo_pagina %}Clientes{% endblock %}
+{% block conteudo %}
+<header class="cabecalho">
+  <div>
+    <h1 class="cabecalho__titulo">Clientes</h1>
+    <p class="cabecalho__sub">Frequência de cada cliente. Inativo é quem não vem há {{ barbearia.dias_inatividade }} dias ou mais e não tem horário marcado.</p>
+  </div>
+  <form class="busca" method="get" role="search">
+    <input type="hidden" name="filtro" value="{{ filtro }}">
+    <label class="sr-only" for="busca">Buscar cliente</label>
+    <input id="busca" type="search" name="busca" value="{{ busca }}" placeholder="Nome ou telefone">
+  </form>
+</header>
+
+<dl class="indicadores">
+  <div class="indicador"><dt>Clientes</dt><dd>{{ ind.total }}</dd></div>
+  <div class="indicador"><dt>Com horário marcado</dt><dd>{{ ind.agendados }}</dd></div>
+  <div class="indicador"><dt>Ativos</dt><dd>{{ ind.ativos }}</dd><small>vieram nos últimos {{ barbearia.dias_inatividade }} dias</small></div>
+  <div class="indicador indicador--alerta"><dt>Inativos</dt><dd>{{ ind.inativos }}</dd></div>
+  <div class="indicador"><dt>Voltam em média a cada</dt><dd>{{ (ind.intervalo_medio_dias ~ " dias") if ind.intervalo_medio_dias else "—" }}</dd></div>
+</dl>
+
+<nav class="segmentos" aria-label="Filtrar clientes">
+  {% for chave, rotulo in filtros.items() %}
+  <a href="{{ url_for('admin.clientes', filtro=chave, busca=busca or None) }}" {% if chave == filtro %}aria-current="page"{% endif %}>{{ rotulo }}</a>
+  {% endfor %}
+</nav>
+
+{% if filtro == 'inativos' %}<form method="post" action="{{ url_for('admin.campanha') }}" id="form-campanha">{{ csrf() }}{% endif %}
+  <div class="painel-bloco tabela-rolagem">
+    <table class="tabela tabela--clientes">
+      <thead>
+        <tr>
+          {% if filtro == 'inativos' and resumos %}<th scope="col" class="col-marca"><input type="checkbox" data-marcar-todos="cliente_ids" checked aria-label="Selecionar todos"></th>{% endif %}
+          <th scope="col">Cliente</th><th scope="col" class="num">Visitas</th><th scope="col">Última visita</th>
+          <th scope="col" class="num">Dias sem vir</th><th scope="col" class="num">Total gasto</th><th scope="col">Situação</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in resumos %}
+        <tr>
+          {% if filtro == 'inativos' %}
+          <td class="col-marca">
+            <input type="checkbox" name="cliente_ids" value="{{ r.cliente.id }}" aria-label="Selecionar {{ r.cliente.nome }}"
+                   {% if r.campanha_recente %}disabled title="Recebeu mensagem há menos de {{ intervalo_campanha }} dias"{% else %}checked{% endif %}>
+          </td>
+          {% endif %}
+          <td><a class="cliente-nome" href="{{ url_for('admin.cliente_detalhe', cliente_id=r.cliente.id) }}">{{ r.cliente.nome }}</a><small>{{ r.cliente.telefone|telefone }}</small></td>
+          <td class="num">{{ r.visitas }}</td>
+          <td class="num">{{ r.ultima_visita|data_br if r.ultima_visita else "—" }}</td>
+          <td class="num">{{ r.dias_sem_vir if r.dias_sem_vir is not none else "—" }}</td>
+          <td class="num">{{ r.total_gasto|moeda }}</td>
+          <td>
+            {% if r.situacao == 'agendado' %}<span class="selo selo--confirmado">Volta {{ r.proximo_horario|data_curta }}</span>
+            {% elif r.situacao == 'inativo' %}<span class="selo selo--nao_compareceu">Inativo</span>{% if r.campanha_recente %}<small>mensagem enviada</small>{% endif %}
+            {% elif r.situacao == 'novo' %}<span class="selo">Sem visitas</span>
+            {% else %}<span class="selo selo--concluido">Ativo</span>{% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="vazio-texto">{{ "Nenhum cliente inativo agora." if filtro == 'inativos' else "Nenhum cliente encontrado." }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% if filtro == 'inativos' %}
+  {% if resumos %}
+  <section class="painel-bloco campanha" aria-labelledby="t-campanha">
+    <h2 class="bloco__titulo" id="t-campanha">Mensagem de reativação</h2>
+    <p class="nota-campo">Vai para os clientes marcados, pelo canal que cada um usou para agendar. Use {nome}, {barbearia} e {link}; eles são trocados automaticamente.</p>
+    <label class="campo"><span class="sr-only">Mensagem</span>
+      <textarea name="mensagem" rows="3" maxlength="500" required>{{ barbearia.mensagem_reativacao }}</textarea></label>
+    <div><button class="botao botao--primario" type="submit">Enviar para os selecionados</button></div>
+  </section>
+  {% endif %}
+</form>
+{% endif %}
+{% endblock %}

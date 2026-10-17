@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, erro_form %}
+{% block titulo %}Criar barbearia · Code Wave{% endblock %}
+{% block classe_body %}publico{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">{% endblock %}
+{% block corpo %}
+<header class="topo-cw">
+  <a class="marca-cw" href="{{ url_for('publico.inicio') }}"><span class="marca-cw__onda" aria-hidden="true"></span>Code Wave</a>
+</header>
+<main class="cadastro">
+  <div class="cadastro__intro">
+    <h1>Crie a página de agendamento da sua barbearia</h1>
+    <p>Depois você ajusta logo, cores e preços, e cadastra a equipe. Cabelo, Barba e Sobrancelha já vêm prontos para editar.</p>
+  </div>
+  <form class="cartao formulario" method="post" data-enviando>
+    {{ csrf() }}
+    {{ erro_form(erro) }}
+    <label class="campo"><span>Nome da barbearia</span>
+      <input name="nome" required maxlength="80" autocomplete="organization" value="{{ valores.get('nome', '') }}" data-gerar-slug="#slug"></label>
+    <label class="campo"><span>Endereço da sua página</span>
+      <span class="campo__prefixo"><span>{{ dominio }}/</span><input id="slug" name="slug" required maxlength="40"
+        pattern="[a-z0-9]+(-[a-z0-9]+)*" autocapitalize="none" spellcheck="false" value="{{ valores.get('slug', '') }}"></span>
+      <small>Letras minúsculas, números e hífen. É o link que vai no QR Code.</small></label>
+    <label class="campo"><span>WhatsApp da barbearia <em>(opcional)</em></span>
+      <input name="whatsapp" type="tel" inputmode="tel" data-telefone placeholder="(11) 98765-4321" value="{{ valores.get('whatsapp', '') }}"></label>
+    <hr class="divisor">
+    <label class="campo"><span>Seu nome</span>
+      <input name="dono_nome" required maxlength="80" autocomplete="name" value="{{ valores.get('dono_nome', '') }}"></label>
+    <label class="campo"><span>E-mail para entrar no painel</span>
+      <input name="email" type="email" required autocomplete="email" value="{{ valores.get('email', '') }}"></label>
+    <label class="campo"><span>Senha</span>
+      <input name="senha" type="password" required minlength="6" autocomplete="new-password"></label>
+    <label class="opcao"><input type="checkbox" name="dono_atende" value="1" {% if not valores or valores.get('dono_atende') %}checked{% endif %}> Também atendo como barbeiro</label>
+    <button class="botao botao--primario botao--grande" type="submit">Criar barbearia</button>
+  </form>
+</main>
+{% endblock %}

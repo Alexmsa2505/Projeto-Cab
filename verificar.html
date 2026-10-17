@@ -1,0 +1,37 @@
+{% extends "cliente/base.html" %}
+{% from "_macros.html" import csrf %}
+{% block titulo %}Confirme seu número · {{ barbearia.nome }}{% endblock %}
+{% block conteudo %}
+<section class="verificacao">
+  <h1 class="titulo-pagina">Digite o código</h1>
+  <p>Enviamos 4 números por {{ solicitacao.canal|canal_rotulo }} para <strong>{{ verificacao.telefone|telefone_mascarado }}</strong>.</p>
+
+  {% if codigo_demo %}
+  <p class="demo-aviso">Modo demonstração: o código é <strong>{{ codigo_demo }}</strong>. Com o WhatsApp ou SMS configurado, ele chega no celular do cliente.</p>
+  {% endif %}
+
+  {% if erro %}<p class="alerta alerta--erro" role="alert">{{ erro }}</p>{% endif %}
+
+  <form method="post" class="verificacao__form" data-enviando>
+    {{ csrf() }}
+    <label class="sr-only" for="codigo">Código de 4 dígitos</label>
+    <input class="codigo" id="codigo" name="codigo" inputmode="numeric" autocomplete="one-time-code"
+           pattern="[0-9]{4}" maxlength="4" required autofocus placeholder="····">
+    <button class="botao botao--marca botao--largo" type="submit">Confirmar agendamento</button>
+  </form>
+
+  <div class="verificacao__ajuda">
+    <form method="post" action="{{ url_for('cliente.reenviar', token=verificacao.token) }}">
+      {{ csrf() }}
+      <button class="link" type="submit" data-contagem="{{ espera }}">Reenviar código</button>
+    </form>
+    <a class="link" href="{{ voltar }}">Corrigir meus dados</a>
+  </div>
+</section>
+
+<aside class="resumo-pedido" aria-label="Resumo do agendamento">
+  <p class="resumo-pedido__quando">{{ solicitacao.inicio|data_extensa|capitalize }}, {{ solicitacao.inicio|hora }}</p>
+  <p>{% if selecao.barbeiro %}Com {{ selecao.barbeiro.nome }}. {% endif %}{{ selecao.servicos|map(attribute='nome')|join(', ') }}.</p>
+  <p class="resumo-pedido__total">{{ selecao.total_centavos|moeda }}</p>
+</aside>
+{% endblock %}

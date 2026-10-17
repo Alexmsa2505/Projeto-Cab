@@ -1,0 +1,88 @@
+{% extends "admin/base.html" %}
+{% block titulo_pagina %}Financeiro{% endblock %}
+{% block conteudo %}
+<header class="cabecalho">
+  <div>
+    <h1 class="cabecalho__titulo">Financeiro</h1>
+    <p class="cabecalho__sub">{{ f.rotulo }}</p>
+  </div>
+  <div class="cabecalho__acoes">
+    <nav class="segmentos" aria-label="Período">
+      {% for chave, rotulo in periodos.items() %}
+      <a href="{{ url_for('admin.financeiro', periodo=chave, data=referencia.isoformat()) }}" {% if chave == f.tipo %}aria-current="page"{% endif %}>{{ rotulo }}</a>
+      {% endfor %}
+    </nav>
+    <div class="navegador-dia">
+      <a class="botao botao--icone" href="{{ url_for('admin.financeiro', periodo=f.tipo, data=anterior.isoformat()) }}" aria-label="Período anterior">‹</a>
+      <a class="botao botao--icone" href="{{ url_for('admin.financeiro', periodo=f.tipo, data=seguinte.isoformat()) }}" aria-label="Próximo período">›</a>
+    </div>
+  </div>
+</header>
+
+<dl class="indicadores">
+  <div class="indicador indicador--largo"><dt>Faturamento</dt><dd>{{ f.bruto|moeda }}</dd><small>{{ f.atendimentos }} atendimentos concluídos</small></div>
+  <div class="indicador indicador--largo"><dt>Fica na barbearia</dt><dd>{{ f.barbearia|moeda }}</dd></div>
+  <div class="indicador indicador--largo"><dt>Comissões a pagar</dt><dd>{{ f.profissional|moeda }}</dd></div>
+  <div class="indicador"><dt>Ticket médio</dt><dd>{{ f.ticket_medio|moeda }}</dd></div>
+  <div class="indicador"><dt>Faltas</dt><dd>{{ f.faltas }}</dd><small>{{ f.taxa_faltas }}% dos atendimentos</small></div>
+</dl>
+
+<section class="painel-bloco" aria-labelledby="t-rateio">
+  <h2 class="bloco__titulo" id="t-rateio">Rateio por profissional</h2>
+  <div class="tabela-rolagem">
+    <table class="tabela">
+      <thead>
+        <tr><th scope="col">Profissional</th><th scope="col" class="num">Atendimentos</th><th scope="col" class="num">Faturamento</th>
+          <th scope="col" class="num">Comissão</th><th scope="col" class="num">Profissional recebe</th><th scope="col" class="num">Barbearia fica</th></tr>
+      </thead>
+      <tbody>
+        {% for l in f.linhas %}
+        <tr>
+          <th scope="row">{{ l.barbeiro.nome }}{% if not l.barbeiro.ativo %} <small>(inativo)</small>{% endif %}</th>
+          <td class="num">{{ l.atendimentos }}</td>
+          <td class="num">{{ l.bruto|moeda }}</td>
+          <td class="num">{{ l.percentual_efetivo }}%</td>
+          <td class="num forte">{{ l.profissional|moeda }}</td>
+          <td class="num">{{ l.barbearia|moeda }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="vazio-texto">Nenhum profissional cadastrado.</td></tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr><th scope="row">Total</th><td class="num">{{ f.atendimentos }}</td><td class="num">{{ f.bruto|moeda }}</td><td></td>
+          <td class="num forte">{{ f.profissional|moeda }}</td><td class="num forte">{{ f.barbearia|moeda }}</td></tr>
+      </tfoot>
+    </table>
+  </div>
+  <p class="nota-tabela">Entram só os atendimentos marcados como concluídos. Cada um usa a comissão que valia no momento da conclusão.</p>
+</section>
+
+<details class="painel-bloco detalhes">
+  <summary>Ver os {{ f.lancamentos|length }} atendimentos do período</summary>
+  {% if f.lancamentos %}
+  <div class="tabela-rolagem">
+    <table class="tabela tabela--compacta">
+      <thead><tr><th scope="col">Quando</th><th scope="col">Cliente</th><th scope="col">Profissional</th><th scope="col">Serviços</th>
+        <th scope="col" class="num">Valor</th><th scope="col" class="num">%</th><th scope="col" class="num">Profissional</th><th scope="col" class="num">Barbearia</th></tr></thead>
+      <tbody>
+        {% for l in f.lancamentos %}
+        <tr>
+          <td class="num">{{ l.agendamento.inicio|data_br }} {{ l.agendamento.inicio|hora }}</td>
+          <td>{{ l.cliente_nome }}</td>
+          <td>{{ l.barbeiro_nome }}</td>
+          <td>{{ l.agendamento.descricao_servicos }}</td>
+          <td class="num">{{ l.agendamento.valor_centavos|moeda }}</td>
+          <td class="num">{{ l.percentual }}%</td>
+          <td class="num">{{ l.profissional|moeda }}</td>
+          <td class="num">{{ l.barbearia|moeda }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="vazio-texto">Nenhum atendimento concluído neste período.</p>
+  {% endif %}
+</details>
+{% endblock %}

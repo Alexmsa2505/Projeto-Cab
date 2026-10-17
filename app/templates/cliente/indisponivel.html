@@ -1,0 +1,9 @@
+{% extends "cliente/base.html" %}
+{% block titulo %}{{ barbearia.nome }}{% endblock %}
+{% block conteudo %}
+<section class="vazio-pagina">
+  <h1 class="titulo-pagina">Agenda online em preparação</h1>
+  <p class="subtitulo">A {{ barbearia.nome }} ainda está cadastrando os serviços e a equipe.{% if barbearia.whatsapp %} Enquanto isso, dá para marcar pelo WhatsApp.{% endif %}</p>
+  {% if barbearia.whatsapp %}<a class="botao botao--marca" href="{{ barbearia.whatsapp|whatsapp }}" target="_blank" rel="noopener">Chamar no WhatsApp</a>{% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "admin/base.html" %}
+{% from "_macros.html" import csrf %}
+{% block titulo_pagina %}Mensagens{% endblock %}
+{% block conteudo %}
+<header class="cabecalho">
+  <div>
+    <h1 class="cabecalho__titulo">Mensagens</h1>
+    <p class="cabecalho__sub">Tudo que saiu por WhatsApp e SMS: códigos, comprovantes, lembretes e campanhas.</p>
+  </div>
+  <form method="post" action="{{ url_for('admin.disparar_lembretes') }}" class="cabecalho__acoes">
+    {{ csrf() }}<button class="botao" type="submit">Enviar lembretes pendentes agora</button>
+  </form>
+</header>
+
+{% if provedor_whatsapp == 'console' or provedor_sms == 'console' %}
+<p class="alerta alerta--info">Modo de teste: as mensagens não chegam aos clientes. Elas aparecem aqui e no terminal. Para enviar de verdade, configure Twilio ou a API do WhatsApp no arquivo .env.</p>
+{% endif %}
+
+<div class="mensagens">
+  {% for m in mensagens %}
+  <article class="mensagem">
+    <header class="mensagem__topo">
+      <span class="selo">{{ m.tipo|tipo_mensagem }}</span>
+      <span>{{ m.canal|canal_rotulo }} para {{ m.telefone|telefone }}</span>
+      <span class="mensagem__status mensagem__status--{{ m.status }}">{{ m.status|status_mensagem }}</span>
+      <time datetime="{{ m.criado_em.isoformat() }}">{{ m.criado_em|data_br }}, {{ m.criado_em|hora }}</time>
+    </header>
+    <p class="mensagem__texto">{{ m.texto|linkify }}</p>
+    {% if m.status == 'falhou' %}
+    <form method="post" action="{{ url_for('admin.reenviar_mensagem', mensagem_id=m.id) }}" class="mensagem__falha">
+      {{ csrf() }}<span>{{ m.erro }}</span><button class="mini" type="submit">Tentar de novo</button>
+    </form>
+    {% endif %}
+  </article>
+  {% else %}
+  <p class="vazio-texto">Nada enviado ainda. Faça um agendamento de teste pela página do cliente para ver o código e o comprovante aqui.</p>
+  {% endfor %}
+</div>
+{% endblock %}

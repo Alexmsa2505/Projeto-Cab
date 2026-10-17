@@ -1,0 +1,39 @@
+{% extends "admin/base.html" %}
+{% block titulo_pagina %}{{ r.cliente.nome }}{% endblock %}
+{% block conteudo %}
+<header class="cabecalho">
+  <div>
+    <p class="migalha"><a href="{{ url_for('admin.clientes') }}">Clientes</a></p>
+    <h1 class="cabecalho__titulo">{{ r.cliente.nome }}</h1>
+    <p class="cabecalho__sub">{{ r.cliente.telefone|telefone }}, cliente desde {{ r.cliente.criado_em|data_br }}</p>
+  </div>
+  <div class="cabecalho__acoes">
+    <a class="botao" href="{{ r.cliente.telefone|whatsapp }}" target="_blank" rel="noopener">Abrir conversa no WhatsApp</a>
+  </div>
+</header>
+
+<dl class="indicadores">
+  <div class="indicador"><dt>Visitas</dt><dd>{{ r.visitas }}</dd></div>
+  <div class="indicador indicador--largo"><dt>Total gasto</dt><dd>{{ r.total_gasto|moeda }}</dd></div>
+  <div class="indicador"><dt>Última visita</dt><dd>{{ r.ultima_visita|data_br if r.ultima_visita else "—" }}</dd>
+    {% if r.dias_sem_vir is not none %}<small>há {{ r.dias_sem_vir }} dias</small>{% endif %}</div>
+  <div class="indicador"><dt>Volta a cada</dt><dd>{{ (r.intervalo_medio_dias ~ " dias") if r.intervalo_medio_dias else "—" }}</dd></div>
+  <div class="indicador"><dt>Faltas</dt><dd>{{ r.faltas }}</dd></div>
+</dl>
+
+<section class="painel-bloco" aria-labelledby="t-historico">
+  <h2 class="bloco__titulo" id="t-historico">Histórico</h2>
+  <ol class="historico" role="list">
+    {% for a in r.historico %}
+    <li class="historico__item">
+      <time datetime="{{ a.inicio.isoformat() }}">{{ a.inicio|data_br }}, {{ a.inicio|hora }}</time>
+      <span>{{ a.descricao_servicos }} com {{ nomes.get(a.barbeiro_id, "profissional removido") }}</span>
+      <span class="selo selo--{{ a.status }}">{{ a.status|status_rotulo }}</span>
+      <span class="num">{{ a.valor_centavos|moeda }}</span>
+    </li>
+    {% else %}
+    <li class="vazio-texto">Nenhum agendamento ainda.</li>
+    {% endfor %}
+  </ol>
+</section>
+{% endblock %}

@@ -1,0 +1,10 @@
+<div class="dias">
+  {% for d in dias %}
+  <label class="dia{% if not d.aberto %} dia--fechado{% endif %}">
+    <input type="radio" name="data" value="{{ d.data.isoformat() }}" {% if d.data == sel_dia %}checked{% endif %} {% if not d.aberto %}disabled{% endif %}>
+    <span class="dia__rotulo">{{ d.rotulo }}</span>
+    <span class="dia__numero">{{ d.dia }}</span>
+    <span class="dia__mes">{{ d.mes if d.aberto else "fechado" }}</span>
+  </label>
+  {% endfor %}
+</div>

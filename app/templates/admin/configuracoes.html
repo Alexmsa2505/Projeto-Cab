@@ -1,0 +1,125 @@
+{% extends "admin/base.html" %}
+{% from "_macros.html" import csrf %}
+{% block titulo_pagina %}Configurações{% endblock %}
+{% block conteudo %}
+<header class="cabecalho">
+  <div>
+    <h1 class="cabecalho__titulo">Configurações</h1>
+    <p class="cabecalho__sub">Identidade visual, horário de funcionamento, lembretes e preços.</p>
+  </div>
+  <div class="cabecalho__acoes">
+    <a class="botao" href="{{ url_for('cliente.agendar') }}" target="_blank" rel="noopener">Ver página de agendamento</a>
+  </div>
+</header>
+
+<section class="painel-bloco" id="identidade" aria-labelledby="t-identidade">
+  <h2 class="bloco__titulo" id="t-identidade">Identidade visual</h2>
+  <div class="identidade">
+    <form method="post" action="{{ url_for('admin.salvar_identidade') }}" enctype="multipart/form-data" class="formulario">
+      {{ csrf() }}
+      <label class="campo"><span>Nome da barbearia</span>
+        <input name="nome" required maxlength="80" value="{{ barbearia.nome }}" data-previa-texto></label>
+      <label class="campo"><span>Endereço</span><input name="endereco" maxlength="160" value="{{ barbearia.endereco }}"></label>
+      <label class="campo"><span>WhatsApp da barbearia</span>
+        <input name="whatsapp" type="tel" inputmode="tel" data-telefone value="{{ barbearia.whatsapp|telefone }}" placeholder="(11) 98765-4321"></label>
+      <div class="cores">
+        <label class="campo"><span>Cor principal</span><input type="color" name="cor_primaria" value="{{ barbearia.cor_primaria }}" data-previa="p"><small>Botões e itens escolhidos</small></label>
+        <label class="campo"><span>Cor de fundo do topo</span><input type="color" name="cor_secundaria" value="{{ barbearia.cor_secundaria }}" data-previa="s"><small>Cabeçalho e QR Code</small></label>
+      </div>
+      <div class="campo">
+        <span>Logo</span>
+        <div class="logo-atual">
+          {% if barbearia.logo_url %}<img src="{{ barbearia.logo_url|imagem_url }}" alt="Logo atual" width="56" height="56">{% endif %}
+          <input type="file" name="logo" accept="image/png,image/jpeg,image/webp,image/gif">
+        </div>
+        {% if barbearia.logo_url %}<label class="opcao"><input type="checkbox" name="remover_logo" value="1"> Remover logo atual</label>{% endif %}
+        <small>PNG, JPG ou WEBP de até 5 MB. Quadrada fica melhor.</small>
+      </div>
+      <div><button class="botao botao--primario" type="submit">Salvar identidade visual</button></div>
+    </form>
+
+    <div class="previa" style="--p: {{ barbearia.cor_primaria }}; --pt: {{ barbearia.cor_primaria|cor_contraste }}; --s: {{ barbearia.cor_secundaria }}; --st: {{ barbearia.cor_secundaria|cor_contraste }}" aria-label="Prévia da página do cliente">
+      <p class="previa__topo">{{ barbearia.nome }}</p>
+      <div class="previa__corpo">
+        <p class="previa__linha"><span>Cabelo</span><span class="pontos"></span><span>R$ 45,00</span></p>
+        <p class="previa__chips"><span class="previa__chip">14:00</span><span class="previa__chip previa__chip--ativo">14:30</span><span class="previa__chip">15:00</span></p>
+        <p class="previa__botao">Receber código</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="painel-bloco" id="funcionamento" aria-labelledby="t-funcionamento">
+  <h2 class="bloco__titulo" id="t-funcionamento">Funcionamento, lembretes e CRM</h2>
+  <form method="post" action="{{ url_for('admin.salvar_funcionamento') }}" class="formulario">
+    {{ csrf() }}
+    <fieldset class="dias-semana">
+      <legend>Dias de atendimento</legend>
+      {% for numero, nome in dias_semana %}
+      <label><input type="checkbox" name="dias" value="{{ numero }}" {% if numero in barbearia.dias_funcionamento %}checked{% endif %}><span>{{ nome[:3]|capitalize }}</span></label>
+      {% endfor %}
+    </fieldset>
+    <div class="campos-linha">
+      <label class="campo"><span>Abre às</span><input type="time" name="abre_as" required value="{{ barbearia.abre_as|hora }}"></label>
+      <label class="campo"><span>Fecha às</span><input type="time" name="fecha_as" required value="{{ barbearia.fecha_as|hora }}"></label>
+      <label class="campo"><span>Horários de</span>
+        <select name="intervalo">{% for i in intervalos %}<option value="{{ i }}" {% if i == barbearia.intervalo_minutos %}selected{% endif %}>{{ i }} em {{ i }} min</option>{% endfor %}</select></label>
+    </div>
+    <div class="campos-linha">
+      <label class="campo"><span>Antecedência mínima</span>
+        <select name="antecedencia">
+          {% set opcoes = [(0, "Sem mínimo"), (30, "30 minutos"), (60, "1 hora"), (120, "2 horas"), (180, "3 horas"), (360, "6 horas"), (720, "12 horas"), (1440, "1 dia")] %}
+          {% if barbearia.antecedencia_minima_minutos not in opcoes|map('first') %}<option value="{{ barbearia.antecedencia_minima_minutos }}" selected>{{ barbearia.antecedencia_minima_minutos }} minutos</option>{% endif %}
+          {% for valor, rotulo in opcoes %}<option value="{{ valor }}" {% if valor == barbearia.antecedencia_minima_minutos %}selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+        </select>
+        <small>Vale para agendar, remarcar e cancelar pelo link.</small></label>
+      <label class="campo"><span>Agenda aberta por</span>
+        <span class="campo__sufixo"><input type="number" name="janela" min="1" max="90" required value="{{ barbearia.janela_agendamento_dias }}"><span>dias</span></span></label>
+    </div>
+    <div class="campos-linha">
+      <label class="campo"><span>Lembrete no WhatsApp</span>
+        <span class="campo__sufixo"><input type="number" name="lembrete_horas" min="1" max="48" required value="{{ barbearia.lembrete_horas_antes }}"><span>horas antes</span></span></label>
+      <label class="campo"><span>Cliente inativo após</span>
+        <span class="campo__sufixo"><input type="number" name="dias_inatividade" min="7" max="365" required value="{{ barbearia.dias_inatividade }}"><span>dias sem vir</span></span></label>
+    </div>
+    <label class="campo"><span>Mensagem padrão de reativação</span>
+      <textarea name="mensagem_reativacao" rows="3" maxlength="500" required>{{ barbearia.mensagem_reativacao }}</textarea>
+      <small>Use {nome}, {barbearia} e {link}. O {link} é obrigatório.</small></label>
+    <div><button class="botao botao--primario" type="submit">Salvar funcionamento</button></div>
+  </form>
+</section>
+
+<section class="painel-bloco" id="servicos" aria-labelledby="t-servicos">
+  <h2 class="bloco__titulo" id="t-servicos">Serviços e preços</h2>
+  <form method="post" action="{{ url_for('admin.salvar_servicos') }}">
+    {{ csrf() }}
+    <div class="tabela-rolagem">
+      <table class="tabela tabela--servicos">
+        <thead><tr><th scope="col">Serviço</th><th scope="col">Preço (R$)</th><th scope="col">Duração (min)</th><th scope="col">Ativo</th></tr></thead>
+        <tbody>
+          {% for s in servicos %}
+          <tr>
+            <td><input type="hidden" name="servico_id" value="{{ s.id }}">
+              <label class="sr-only" for="nome_{{ s.id }}">Nome</label><input id="nome_{{ s.id }}" name="nome_{{ s.id }}" required maxlength="40" value="{{ s.nome }}"></td>
+            <td><label class="sr-only" for="preco_{{ s.id }}">Preço de {{ s.nome }}</label><input id="preco_{{ s.id }}" name="preco_{{ s.id }}" type="number" min="0" step="0.01" required value="{{ s.preco_centavos|reais }}"></td>
+            <td><label class="sr-only" for="duracao_{{ s.id }}">Duração de {{ s.nome }}</label><input id="duracao_{{ s.id }}" name="duracao_{{ s.id }}" type="number" min="5" max="480" step="5" required value="{{ s.duracao_minutos }}"></td>
+            <td><label class="opcao"><input type="checkbox" name="ativo_{{ s.id }}" value="1" {% if s.ativo %}checked{% endif %}><span class="sr-only">{{ s.nome }} ativo</span></label></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="linha-botoes"><button class="botao botao--primario" type="submit">Salvar serviços</button></div>
+  </form>
+  <form method="post" action="{{ url_for('admin.novo_servico') }}" class="novo-servico">
+    {{ csrf() }}
+    <p class="bloco__subtitulo">Novo serviço</p>
+    <div class="campos-linha">
+      <label class="campo"><span>Nome</span><input name="nome" required maxlength="40" placeholder="Ex.: Pigmentação"></label>
+      <label class="campo"><span>Preço (R$)</span><input name="preco" type="number" min="0" step="0.01" required></label>
+      <label class="campo"><span>Duração (min)</span><input name="duracao" type="number" min="5" max="480" step="5" required value="30"></label>
+    </div>
+    <div><button class="botao" type="submit">Adicionar serviço</button></div>
+  </form>
+</section>
+{% endblock %}

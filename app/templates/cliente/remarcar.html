@@ -1,0 +1,28 @@
+{% extends "cliente/base.html" %}
+{% from "_macros.html" import csrf %}
+{% block titulo %}Remarcar horário · {{ barbearia.nome }}{% endblock %}
+{% block conteudo %}
+<h1 class="titulo-pagina">Remarcar horário</h1>
+<p class="subtitulo">Horário atual: {{ ag.inicio|data_extensa }} às {{ ag.inicio|hora }}{% if barbeiro %}, com {{ barbeiro.nome }}{% endif %}.
+  {{ ag.descricao_servicos }} ({{ ag.duracao_minutos|duracao }}).</p>
+{% if erro %}<p class="alerta alerta--erro" role="alert">{{ erro }}</p>{% endif %}
+
+<form method="post" class="agendamento" data-enviando>
+  {{ csrf() }}
+  <div class="escolhas" hx-get="{{ url_for('cliente.horarios_remarcar', token=ag.token) }}" hx-trigger="change"
+       hx-include="this" hx-target="#horarios" hx-sync="this:replace">
+    <section class="etapa" aria-labelledby="etapa-dia">
+      <h2 class="etapa__titulo" id="etapa-dia"><span class="etapa__num" aria-hidden="true">1</span>Novo dia</h2>
+      {% include "cliente/_dias.html" %}
+    </section>
+    <section class="etapa" aria-labelledby="etapa-horario">
+      <h2 class="etapa__titulo" id="etapa-horario"><span class="etapa__num" aria-hidden="true">2</span>Novo horário</h2>
+      <div id="horarios" class="horarios" aria-live="polite">{% include "cliente/_horarios.html" %}</div>
+    </section>
+  </div>
+  <div class="resumo">
+    <a class="link" href="{{ url_for('cliente.agendamento', token=ag.token) }}">Voltar sem mudar</a>
+    <button class="botao botao--marca" type="submit">Remarcar</button>
+  </div>
+</form>
+{% endblock %}

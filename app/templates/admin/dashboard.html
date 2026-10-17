@@ -1,0 +1,20 @@
+{% extends "admin/base.html" %}
+{% block titulo_pagina %}Agenda do dia{% endblock %}
+{% block conteudo %}
+<header class="cabecalho">
+  <div>
+    <h1 class="cabecalho__titulo">Agenda do dia</h1>
+    <p class="cabecalho__sub">{{ dia|data_extensa|capitalize }}{% if dia == hoje %}, hoje{% endif %}</p>
+  </div>
+  <nav class="navegador-dia" aria-label="Escolher dia">
+    <a class="botao botao--icone" href="{{ url_for('admin.dashboard', data=ontem.isoformat()) }}" aria-label="Dia anterior">‹</a>
+    <a class="botao" href="{{ url_for('admin.dashboard') }}" {% if dia == hoje %}aria-current="date"{% endif %}>Hoje</a>
+    <a class="botao botao--icone" href="{{ url_for('admin.dashboard', data=amanha.isoformat()) }}" aria-label="Próximo dia">›</a>
+    <form method="get" class="navegador-dia__data">
+      <label class="sr-only" for="data">Ir para a data</label>
+      <input type="date" id="data" name="data" value="{{ dia.isoformat() }}" data-enviar-ao-mudar>
+    </form>
+  </nav>
+</header>
+{% include "admin/_quadro.html" %}
+{% endblock %}

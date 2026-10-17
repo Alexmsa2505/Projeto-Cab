@@ -1,0 +1,73 @@
+{% extends "cliente/base.html" %}
+{% from "_macros.html" import csrf %}
+{% block titulo %}Seu horário · {{ barbearia.nome }}{% endblock %}
+{% block conteudo %}
+{% if novo %}
+<div class="confirmado" role="status">
+  <h1 class="titulo-pagina">Horário marcado</h1>
+  <p class="subtitulo">Enviamos o comprovante por {{ ag.canal|canal_rotulo }}. Por este link você remarca ou cancela quando precisar.</p>
+</div>
+{% else %}
+<h1 class="titulo-pagina">Seu horário</h1>
+{% endif %}
+
+<div class="comanda-sombra">
+  <article class="comanda" aria-label="Comprovante do agendamento">
+    <header class="comanda__topo">
+      <span class="comanda__casa">{{ barbearia.nome }}</span>
+      <span class="selo selo--{{ ag.status }}">{{ ag.status|status_rotulo }}</span>
+    </header>
+    <p class="comanda__dia">{{ ag.inicio|data_extensa|capitalize }}</p>
+    <p class="comanda__hora">{{ ag.inicio|hora }}</p>
+    <p class="comanda__com">com {{ barbeiro.nome if barbeiro else "profissional" }}, até {{ ag.fim|hora }}</p>
+    <ul class="comanda__itens" role="list">
+      {% for item in ag.itens %}
+      <li><span>{{ item.nome }}</span><span class="pontos" aria-hidden="true"></span><span>{{ item.preco_centavos|moeda }}</span></li>
+      {% endfor %}
+    </ul>
+    <p class="comanda__total"><span>Total</span><span class="pontos" aria-hidden="true"></span><span>{{ ag.valor_centavos|moeda }}</span></p>
+    <footer class="comanda__rodape">
+      <span>{{ cliente.nome if cliente else "" }}</span>
+      <span>Nº {{ "%05d"|format(ag.id) }}</span>
+    </footer>
+  </article>
+</div>
+
+{% if ag.ativo and not passou %}
+  {% if acao == 'confirmar' and pode_confirmar %}
+  <p class="destaque">Toque em “Confirmar presença” para avisar a barbearia que você vem.</p>
+  {% elif acao == 'cancelar' and pode_alterar %}
+  <p class="destaque">Não vai conseguir vir? Cancele para liberar o horário para outra pessoa, ou remarque para outro dia.</p>
+  {% endif %}
+
+  <div class="acoes">
+    {% if pode_confirmar and not novo %}
+    <form method="post" action="{{ url_for('cliente.confirmar', token=ag.token) }}" data-enviando>
+      {{ csrf() }}<button class="botao botao--marca botao--largo" type="submit">Confirmar presença</button>
+    </form>
+    {% elif ag.status == 'confirmado' %}
+    <p class="nota nota--ok">Presença confirmada. Até lá!</p>
+    {% endif %}
+
+    {% if pode_alterar %}
+    <div class="acoes__linha">
+      <a class="botao botao--largo" href="{{ url_for('cliente.remarcar', token=ag.token) }}">Remarcar</a>
+      <form method="post" action="{{ url_for('cliente.cancelar', token=ag.token) }}"
+            data-confirmar="Cancelar o horário de {{ ag.inicio|data_curta }} às {{ ag.inicio|hora }}?">
+        {{ csrf() }}<button class="botao botao--perigo botao--largo" type="submit">Cancelar horário</button>
+      </form>
+    </div>
+    {% else %}
+    <p class="nota">Faltam menos de {{ prazo }} para o horário, então remarcar ou cancelar só falando com a barbearia.
+      {% if barbearia.whatsapp %}<a href="{{ barbearia.whatsapp|whatsapp }}" target="_blank" rel="noopener">Chamar no WhatsApp</a>{% endif %}</p>
+    {% endif %}
+  </div>
+
+  <div class="extras">
+    <a class="link" href="{{ link_google }}" target="_blank" rel="noopener">Adicionar à agenda do Google</a>
+    <button class="link" type="button" data-copiar="{{ link_gestao }}">Copiar link deste comprovante</button>
+  </div>
+{% else %}
+  <a class="botao botao--marca botao--largo" href="{{ url_for('cliente.agendar') }}">Marcar outro horário</a>
+{% endif %}
+{% endblock %}

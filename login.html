@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "_macros.html" import avisos, csrf %}
+{% block titulo %}Entrar · {{ barbearia.nome }}{% endblock %}
+{% block classe_body %}painel{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">{% endblock %}
+{% block corpo %}
+<main class="acesso">
+  <div class="acesso__cartao">
+    <p class="acesso__casa">
+      {% if barbearia.logo_url %}<img src="{{ barbearia.logo_url|imagem_url }}" alt="" width="32" height="32">{% endif %}
+      {{ barbearia.nome }}
+    </p>
+    <h1>Entrar no painel</h1>
+    {{ avisos() }}
+    {% if erro %}<p class="alerta alerta--erro" role="alert">{{ erro }}</p>{% endif %}
+    <form method="post" class="formulario">
+      {{ csrf() }}
+      <label class="campo"><span>E-mail</span>
+        <input type="email" name="email" value="{{ email }}" required autocomplete="username" autofocus></label>
+      <label class="campo"><span>Senha</span>
+        <input type="password" name="senha" required autocomplete="current-password"></label>
+      <button class="botao botao--primario botao--largo" type="submit">Entrar</button>
+    </form>
+    {% if contas_demo %}
+    <div class="acesso__demo">
+      <p>Acessos de demonstração, senha <strong>{{ senha_demo }}</strong>. Toque para entrar:</p>
+      <ul>
+        {% for email, papel in contas_demo %}
+        <li><button type="button" class="link" data-preencher-login="{{ email }}" data-senha="{{ senha_demo }}">{{ email }}</button> <small>{{ papel }}</small></li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+  <p class="acesso__marca">Painel Code Wave</p>
+</main>
+{% endblock %}

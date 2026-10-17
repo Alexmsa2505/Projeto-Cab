@@ -1,0 +1,18 @@
+{% if aviso %}
+  <p class="horarios__vazio">{{ aviso }}</p>
+{% else %}
+  {% for rotulo, horarios in grupos %}
+  <fieldset class="periodo">
+    <legend class="periodo__titulo">{{ rotulo }}</legend>
+    <div class="periodo__horas">
+      {% for h in horarios %}
+      {% set valor = h.strftime('%H:%M') %}
+      <label class="hora">
+        <input type="radio" name="horario" id="hora-{{ valor|replace(':', '') }}" value="{{ valor }}" {% if valor == horario_sel %}checked{% endif %} required>
+        <span>{{ valor }}</span>
+      </label>
+      {% endfor %}
+    </div>
+  </fieldset>
+  {% endfor %}
+{% endif %}

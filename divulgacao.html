@@ -1,0 +1,37 @@
+{% extends "admin/base.html" %}
+{% block titulo_pagina %}QR Code{% endblock %}
+{% block conteudo %}
+<header class="cabecalho">
+  <div>
+    <h1 class="cabecalho__titulo">QR Code</h1>
+    <p class="cabecalho__sub">Imprima e deixe no balcão, no espelho ou na vitrine. A câmera do celular abre direto na página de agendamento.</p>
+  </div>
+  <div class="cabecalho__acoes">
+    <button class="botao botao--primario" type="button" data-imprimir>Imprimir cartaz</button>
+    <a class="botao" href="{{ url_for('cliente.qrcode', formato='png') }}">Baixar PNG</a>
+    <a class="botao" href="{{ url_for('cliente.qrcode', formato='svg') }}">Baixar SVG</a>
+  </div>
+</header>
+
+{% if url_local %}
+<p class="alerta alerta--info">Este QR Code aponta para {{ url }}, que só abre neste computador. Para testar no celular, coloque em BASE_URL (arquivo .env) o IP da máquina na rede, por exemplo http://192.168.0.10:5000, e rode com HOST=0.0.0.0.</p>
+{% endif %}
+
+<div class="divulgacao">
+  <article class="cartaz" style="--marca: {{ barbearia.cor_primaria }}; --marca-escura: {{ barbearia.cor_secundaria }}; --marca-escura-texto: {{ barbearia.cor_secundaria|cor_contraste }}">
+    {% if barbearia.logo_url %}<img class="cartaz__logo" src="{{ barbearia.logo_url|imagem_url }}" alt="" width="72" height="72">{% endif %}
+    <p class="cartaz__nome">{{ barbearia.nome }}</p>
+    <p class="cartaz__chamada">Agende seu horário pelo celular</p>
+    <div class="cartaz__qr">{{ qr }}</div>
+    <p class="cartaz__passos">Aponte a câmera, escolha serviço, barbeiro e horário, e confirme com o código que chega no seu WhatsApp.</p>
+    <p class="cartaz__url">{{ url|replace('https://', '')|replace('http://', '') }}</p>
+  </article>
+
+  <aside class="painel-bloco">
+    <h2 class="bloco__titulo">Link da sua página</h2>
+    <p class="link-copiavel"><code>{{ url }}</code></p>
+    <button class="botao" type="button" data-copiar="{{ url }}">Copiar link</button>
+    <p class="nota-campo">Use o mesmo link na bio do Instagram, no Google Meu Negócio e no status do WhatsApp.</p>
+  </aside>
+</div>
+{% endblock %}

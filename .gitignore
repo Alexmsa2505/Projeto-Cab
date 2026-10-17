@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# Imagens enviadas pelas barbearias (logo e portfólio)
+app/static/uploads/*
+!app/static/uploads/.gitkeep

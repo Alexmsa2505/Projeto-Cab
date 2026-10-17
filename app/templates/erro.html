@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block titulo %}{{ titulo }} | Code Wave{% endblock %}
+{% block classe_body %}pagina-erro{% endblock %}
+{% block corpo %}
+<main class="erro">
+  <p class="erro__codigo">{{ codigo }}</p>
+  <h1 class="erro__titulo">{{ titulo }}</h1>
+  <p class="erro__texto">{{ mensagem }}</p>
+  <p><a class="botao" href="javascript:history.back()">Voltar</a>
+    {% if barbearia %}<a class="botao botao--fantasma" href="{{ url_for('cliente.agendar', slug=barbearia.slug) }}">Ir para a página de agendamento</a>{% endif %}
+  </p>
+</main>
+{% endblock %}

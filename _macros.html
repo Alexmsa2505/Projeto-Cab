@@ -1,0 +1,17 @@
+{% macro avisos() %}
+  {% with mensagens = get_flashed_messages(with_categories=true) %}
+    {% if mensagens %}
+      <div class="avisos" role="status">
+        {% for categoria, texto in mensagens %}
+          <p class="alerta alerta--{{ categoria if categoria in ['erro', 'sucesso', 'info'] else 'info' }}">{{ texto }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+{% endmacro %}
+
+{% macro erro_form(erro) %}
+  {% if erro %}<p class="alerta alerta--erro" role="alert">{{ erro }}</p>{% endif %}
+{% endmacro %}
+
+{% macro csrf() %}<input type="hidden" name="_csrf" value="{{ csrf_token() }}">{% endmacro %}

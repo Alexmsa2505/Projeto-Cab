@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block titulo %}Code Wave · Agenda online para barbearias{% endblock %}
+{% block classe_body %}publico{% endblock %}
+{% block estilos %}<link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">{% endblock %}
+{% block corpo %}
+<header class="topo-cw">
+  <a class="marca-cw" href="{{ url_for('publico.inicio') }}"><span class="marca-cw__onda" aria-hidden="true"></span>Code Wave</a>
+  <a class="botao botao--fantasma" href="{{ url_for('publico.cadastro') }}">Criar minha barbearia</a>
+</header>
+
+<main class="vitrine-cw">
+  <section class="hero-cw">
+    <div class="hero-cw__texto">
+      <h1>A agenda da sua barbearia, a um QR Code de distância.</h1>
+      <p>O cliente escolhe serviço, barbeiro e horário pelo celular e confirma com um código de 4 dígitos.
+        Você acompanha o dia, o rateio das comissões e quem anda sumido.</p>
+      <a class="botao botao--primario botao--grande" href="{{ url_for('publico.cadastro') }}">Criar minha barbearia</a>
+    </div>
+    {% if placa %}
+    <figure class="placa" style="--marca: {{ placa.barbearia.cor_primaria }}; --marca-escura: {{ placa.barbearia.cor_secundaria }}">
+      <p class="placa__nome">{{ placa.barbearia.nome }}</p>
+      <div class="placa__qr">{{ placa.qr }}</div>
+      <figcaption>Aponte a câmera e agende</figcaption>
+    </figure>
+    {% endif %}
+  </section>
+
+  {% if barbearias %}
+  <section class="demos" aria-labelledby="titulo-demos">
+    <h2 id="titulo-demos">Barbearias de demonstração</h2>
+    <p class="demos__nota">Os dados são de exemplo e voltam ao estado inicial quando o servidor reinicia. Senha de todos os acessos: <strong>{{ senha_demo }}</strong></p>
+    <ul class="demos__lista">
+      {% for b in barbearias %}
+      <li class="demo" style="--marca: {{ b.cor_primaria }}; --marca-escura: {{ b.cor_secundaria }}">
+        <h3 class="demo__nome">{{ b.nome }}</h3>
+        <p class="demo__endereco">{{ b.endereco or "Endereço não informado" }}</p>
+        <div class="demo__links">
+          <a class="botao botao--pequeno" href="{{ url_for('cliente.agendar', slug=b.slug) }}">Agendar como cliente</a>
+          <a class="botao botao--pequeno botao--fantasma" href="{{ url_for('admin.login', slug=b.slug) }}">Abrir o painel</a>
+        </div>
+        {% if contas.get(b.slug) %}
+        <dl class="demo__contas">
+          {% for email, papel in contas[b.slug] %}
+          <div><dt>{{ papel }}</dt><dd>{{ email }}</dd></div>
+          {% endfor %}
+        </dl>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+</main>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends "cliente/base.html" %}
+{% from "_macros.html" import csrf %}
+{% block titulo %}Agendar horário · {{ barbearia.nome }}{% endblock %}
+{% block conteudo %}
+<form class="agendamento" method="post" action="{{ url_for('cliente.solicitar') }}" data-enviando>
+  {{ csrf() }}
+  {% if erro %}<p class="alerta alerta--erro" role="alert">{{ erro }}</p>{% endif %}
+
+  {# Cada mudança aqui pede ao servidor os horários livres e o novo total (HTMX) #}
+  <div class="escolhas" hx-get="{{ url_for('cliente.disponibilidade') }}" hx-trigger="change"
+       hx-include="this" hx-target="#horarios" hx-sync="this:replace">
+
+    <section class="etapa" aria-labelledby="etapa-servicos">
+      <h2 class="etapa__titulo" id="etapa-servicos"><span class="etapa__num" aria-hidden="true">1</span>Serviços</h2>
+      <ul class="tabela-precos" role="list">
+        {% for s in servicos %}
+        <li>
+          <label class="preco">
+            <input type="checkbox" name="servicos" value="{{ s.id }}" {% if s.id in sel_servicos %}checked{% endif %}>
+            <span class="preco__caixa" aria-hidden="true"></span>
+            <span class="preco__nome">{{ s.nome }}<small>{{ s.duracao_minutos|duracao }}</small></span>
+            <span class="pontos" aria-hidden="true"></span>
+            <span class="preco__valor">{{ s.preco_centavos|moeda }}</span>
+          </label>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section class="etapa" aria-labelledby="etapa-profissional">
+      <h2 class="etapa__titulo" id="etapa-profissional"><span class="etapa__num" aria-hidden="true">2</span>Profissional</h2>
+      <div class="barbeiros">
+        {% for b in barbeiros %}
+        <div class="barbeiro">
+          <label class="barbeiro__escolha">
+            <input type="radio" name="barbeiro_id" value="{{ b.id }}" {% if b.id == sel_barbeiro %}checked{% endif %} required>
+            <span class="barbeiro__avatar" aria-hidden="true">{{ b.iniciais }}</span>
+            <span class="barbeiro__info">
+              <strong>{{ b.nome }}</strong>
+              {% if b.especialidade %}<small>{{ b.especialidade }}</small>{% endif %}
+            </span>
+          </label>
+          {% if b.fotos %}
+          <div class="barbeiro__fotos">
+            {% for foto in b.fotos %}
+            <button type="button" class="barbeiro__foto" data-ampliar="{{ foto|imagem_url }}" data-legenda="Trabalho de {{ b.nome }}"
+                    aria-label="Ver foto {{ loop.index }} do trabalho de {{ b.nome }}">
+              <img src="{{ foto|imagem_url }}" alt="" loading="lazy" width="48" height="60">
+            </button>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="etapa" aria-labelledby="etapa-dia">
+      <h2 class="etapa__titulo" id="etapa-dia"><span class="etapa__num" aria-hidden="true">3</span>Dia</h2>
+      {% include "cliente/_dias.html" %}
+    </section>
+
+    <section class="etapa" aria-labelledby="etapa-horario">
+      <h2 class="etapa__titulo" id="etapa-horario"><span class="etapa__num" aria-hidden="true">4</span>Horário</h2>
+      <div id="horarios" class="horarios" aria-live="polite">{% include "cliente/_horarios.html" %}</div>
+    </section>
+  </div>
+
+  <section class="etapa" aria-labelledby="etapa-dados">
+    <h2 class="etapa__titulo" id="etapa-dados"><span class="etapa__num" aria-hidden="true">5</span>Seus dados</h2>
+    <div class="campos">
+      <label class="campo"><span>Nome</span>
+        <input name="nome" required maxlength="80" autocomplete="name" value="{{ nome }}"></label>
+      <label class="campo"><span>Celular com DDD</span>
+        <input name="telefone" type="tel" inputmode="tel" autocomplete="tel-national" required data-telefone
+               placeholder="(11) 98765-4321" value="{{ telefone }}"></label>
+    </div>
+    <fieldset class="canais">
+      <legend>Receber o código de confirmação por</legend>
+      <label class="canal"><input type="radio" name="canal" value="whatsapp" {% if canal != 'sms' %}checked{% endif %}><span>WhatsApp</span></label>
+      <label class="canal"><input type="radio" name="canal" value="sms" {% if canal == 'sms' %}checked{% endif %}><span>SMS</span></label>
+    </fieldset>
+    {% if telefone_verificado %}
+    <p class="nota">Você confirmou este número há pouco, então não vamos pedir o código de novo.</p>
+    {% else %}
+    <p class="nota">Sem cadastro e sem senha: enviamos um código de 4 dígitos para confirmar que o número é seu.</p>
+    {% endif %}
+  </section>
+
+  <div id="resumo" class="resumo">{% include "cliente/_resumo.html" %}</div>
+</form>
+
+<dialog class="ampliacao" id="ampliacao" aria-label="Foto do portfólio">
+  <form method="dialog"><button class="ampliacao__fechar" aria-label="Fechar">×</button></form>
+  <img src="" alt="">
+  <p class="ampliacao__legenda"></p>
+</dialog>
+{% endblock %}

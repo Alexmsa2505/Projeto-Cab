@@ -1,0 +1,82 @@
+{% extends "admin/base.html" %}
+{% from "_macros.html" import csrf %}
+{% block titulo_pagina %}Equipe{% endblock %}
+{% block conteudo %}
+<header class="cabecalho">
+  <div>
+    <h1 class="cabecalho__titulo">Equipe</h1>
+    <p class="cabecalho__sub">Comissão, fotos do portfólio e acesso ao painel de cada profissional.</p>
+  </div>
+</header>
+
+<div class="equipe">
+  {% for b in barbeiros %}
+  {% set acesso = acessos.get(b.id) %}
+  <form class="painel-bloco profissional{% if not b.ativo %} profissional--inativo{% endif %}" id="barbeiro-{{ b.id }}"
+        method="post" action="{{ url_for('admin.editar_barbeiro', barbeiro_id=b.id) }}" enctype="multipart/form-data">
+    {{ csrf() }}
+    <div class="profissional__cabeca">
+      <span class="avatar avatar--grande" aria-hidden="true">{{ b.iniciais }}</span>
+      <label class="opcao"><input type="checkbox" name="ativo" value="1" {% if b.ativo %}checked{% endif %}> Atendendo clientes</label>
+    </div>
+    <div class="campos-linha campos-linha--nome">
+      <label class="campo"><span>Nome</span><input name="nome" required maxlength="80" value="{{ b.nome }}"></label>
+      <label class="campo"><span>Comissão</span>
+        <span class="campo__sufixo"><input name="comissao" type="number" min="0" max="100" required value="{{ b.comissao_percentual }}"><span>%</span></span></label>
+    </div>
+    <label class="campo"><span>Especialidade</span>
+      <input name="especialidade" maxlength="80" placeholder="Ex.: degradê e navalhado" value="{{ b.especialidade }}"></label>
+
+    <fieldset class="portfolio">
+      <legend>Portfólio <small>até {{ max_fotos }} fotos, aparecem na página de agendamento</small></legend>
+      <div class="portfolio__fotos">
+        {% for foto in b.fotos %}
+        <figure class="portfolio__foto">
+          <img src="{{ foto|imagem_url }}" alt="Foto {{ loop.index }} do portfólio de {{ b.nome }}" width="96" height="120">
+          <button class="mini" type="submit" form="remover-{{ b.id }}-{{ loop.index0 }}">Remover</button>
+        </figure>
+        {% endfor %}
+        {% if b.fotos|length < max_fotos %}
+        <label class="portfolio__enviar">
+          <input type="file" name="foto" accept="image/png,image/jpeg,image/webp,image/gif">
+          <span>Adicionar foto</span>
+        </label>
+        {% endif %}
+      </div>
+    </fieldset>
+
+    <fieldset class="acesso-prof">
+      <legend>Acesso ao painel {% if acesso %}<small>entra como {{ acesso.papel|papel_rotulo|lower }}</small>{% endif %}</legend>
+      <div class="campos-linha">
+        <label class="campo"><span>E-mail</span>
+          <input type="email" name="email" autocomplete="off" placeholder="opcional" value="{{ acesso.email if acesso else '' }}"></label>
+        <label class="campo"><span>{{ "Nova senha" if acesso else "Senha" }}</span>
+          <input type="password" name="senha" minlength="6" autocomplete="new-password" placeholder="{{ 'deixe em branco para manter' if acesso else 'mínimo de 6 caracteres' }}"></label>
+      </div>
+    </fieldset>
+    <div><button class="botao botao--primario" type="submit">Salvar alterações</button></div>
+  </form>
+  {% for foto in b.fotos %}
+  <form id="remover-{{ b.id }}-{{ loop.index0 }}" method="post" action="{{ url_for('admin.remover_foto', barbeiro_id=b.id, indice=loop.index0) }}"
+        data-confirmar="Remover esta foto do portfólio de {{ b.nome }}?" hidden>{{ csrf() }}</form>
+  {% endfor %}
+  {% endfor %}
+
+  <form class="painel-bloco profissional profissional--novo" method="post" action="{{ url_for('admin.equipe') }}" id="novo-profissional">
+    {{ csrf() }}
+    <h2 class="bloco__titulo">Adicionar profissional</h2>
+    {% if erro %}<p class="alerta alerta--erro" role="alert">{{ erro }}</p>{% endif %}
+    <div class="campos-linha campos-linha--nome">
+      <label class="campo"><span>Nome</span><input name="nome" required maxlength="80" value="{{ valores.get('nome', '') }}"></label>
+      <label class="campo"><span>Comissão</span>
+        <span class="campo__sufixo"><input name="comissao" type="number" min="0" max="100" required value="{{ valores.get('comissao', '50') }}"><span>%</span></span></label>
+    </div>
+    <label class="campo"><span>Especialidade</span><input name="especialidade" maxlength="80" value="{{ valores.get('especialidade', '') }}"></label>
+    <div class="campos-linha">
+      <label class="campo"><span>E-mail de acesso <em>(opcional)</em></span><input type="email" name="email" autocomplete="off" value="{{ valores.get('email', '') }}"></label>
+      <label class="campo"><span>Senha</span><input type="password" name="senha" minlength="6" autocomplete="new-password"></label>
+    </div>
+    <div><button class="botao botao--primario" type="submit">Adicionar profissional</button></div>
+  </form>
+</div>
+{% endblock %}

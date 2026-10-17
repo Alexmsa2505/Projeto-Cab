@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "_macros.html" import avisos %}
+{% block meta %}<meta name="theme-color" content="{{ barbearia.cor_secundaria }}">{% endblock %}
+{% block classe_body %}cliente{% endblock %}
+{% block estilos %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cliente.css') }}">
+{# Cores do white-label (validadas como #RRGGBB antes de salvar) #}
+<style>
+  :root {
+    --marca: {{ barbearia.cor_primaria }};
+    --marca-texto: {{ barbearia.cor_primaria|cor_contraste }};
+    --marca-escura: {{ barbearia.cor_secundaria }};
+    --marca-escura-texto: {{ barbearia.cor_secundaria|cor_contraste }};
+  }
+</style>
+{% endblock %}
+{% block corpo %}
+<header class="fachada">
+  <div class="fachada__conteudo">
+    {% if barbearia.logo_url %}
+      <img class="fachada__logo" src="{{ barbearia.logo_url|imagem_url }}" alt="Logo da {{ barbearia.nome }}" width="64" height="64">
+    {% endif %}
+    <div>
+      <a class="fachada__nome" href="{{ url_for('cliente.agendar') }}">{{ barbearia.nome }}</a>
+      {% if barbearia.endereco %}<p class="fachada__endereco">{{ barbearia.endereco }}</p>{% endif %}
+    </div>
+  </div>
+</header>
+<main class="palco">
+  {{ avisos() }}
+  {% block conteudo %}{% endblock %}
+</main>
+<footer class="rodape">
+  {% if barbearia.whatsapp %}<a href="{{ barbearia.whatsapp|whatsapp }}" target="_blank" rel="noopener">Falar com a barbearia no WhatsApp</a>{% endif %}
+  <p>Agendamento online por Code Wave</p>
+</footer>
+{% endblock %}

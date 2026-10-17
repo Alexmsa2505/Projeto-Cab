@@ -1,0 +1,111 @@
+{% from "_macros.html" import csrf %}
+{% macro acao(ag, nome, rotulo, confirmar=None) %}
+<form method="post" action="{{ url_for('admin.alterar_status', agendamento_id=ag.id) }}"
+      hx-post="{{ url_for('admin.alterar_status', agendamento_id=ag.id) }}" hx-target="#quadro" hx-swap="outerHTML"
+      {% if confirmar %}hx-confirm="{{ confirmar }}" data-confirmar="{{ confirmar }}"{% endif %}>
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <input type="hidden" name="acao" value="{{ nome }}">
+  <button class="mini mini--{{ nome }}" type="submit">{{ rotulo }}</button>
+</form>
+{% endmacro %}
+<div id="quadro" class="quadro" hx-get="{{ url_for('admin.quadro', data=dia.isoformat()) }}" hx-trigger="every 60s" hx-swap="outerHTML">
+  {% if erro %}<p class="alerta alerta--erro" role="alert">{{ erro }}</p>{% endif %}
+
+  <dl class="indicadores">
+    <div class="indicador">
+      <dt>Agendamentos</dt><dd>{{ quadro.total_agendamentos }}</dd>
+      <small>{{ quadro.aguardando_confirmacao }} sem confirmação</small>
+    </div>
+    <div class="indicador"><dt>Horários vagos</dt><dd>{{ quadro.horarios_vagos }}</dd><small>a partir de agora</small></div>
+    <div class="indicador">
+      <dt>Ocupação</dt><dd>{{ quadro.ocupacao_percentual }}%</dd>
+      <span class="medidor" aria-hidden="true"><span style="width: {{ quadro.ocupacao_percentual }}%"></span></span>
+    </div>
+    <div class="indicador indicador--largo">
+      <dt>Faturamento previsto</dt><dd>{{ quadro.previsto_centavos|moeda }}</dd>
+      <small>{{ quadro.realizado_centavos|moeda }} já realizado</small>
+    </div>
+  </dl>
+
+  {% if not quadro.aberto %}
+  <p class="aviso-dia">A barbearia não abre neste dia. Agendamentos e bloqueios aparecem abaixo, se houver.</p>
+  {% endif %}
+
+  {% if not quadro.colunas %}
+  <div class="vazio">
+    <p>Cadastre a equipe para a agenda aparecer aqui.</p>
+    {% if usuario.e_dono %}<a class="botao botao--primario" href="{{ url_for('admin.equipe') }}">Cadastrar profissional</a>{% endif %}
+  </div>
+  {% else %}
+  <div class="colunas" style="--n: {{ quadro.colunas|length }}">
+    {% for coluna in quadro.colunas %}
+    {% set b = coluna.barbeiro %}
+    <section class="coluna" aria-labelledby="col-{{ b.id }}">
+      <header class="coluna__topo">
+        <span class="avatar" aria-hidden="true">{{ b.iniciais }}</span>
+        <div>
+          <h2 id="col-{{ b.id }}">{{ b.nome }}</h2>
+          <p>{{ coluna.qtd_agendamentos }} {{ "horário" if coluna.qtd_agendamentos == 1 else "horários" }}, {{ coluna.previsto_centavos|moeda }}</p>
+        </div>
+      </header>
+      <ol class="linha" role="list">
+        {% for item in coluna.itens %}
+        {% set agora_aqui = dia == hoje and item.inicio <= agora_ < item.fim %}
+        <li class="item item--{{ item.tipo }}{% if item.passado %} item--passado{% endif %}{% if agora_aqui %} item--agora{% endif %}{% if item.agendamento %} status--{{ item.agendamento.status }}{% endif %}"
+            style="--min: {{ [item.minutos, 15]|max }}">
+          <time class="item__hora" datetime="{{ item.inicio.isoformat() }}">{{ item.inicio|hora }}</time>
+          {% if item.tipo == 'agendamento' %}
+            {% set ag = item.agendamento %}
+            <div class="item__corpo">
+              <p class="item__titulo">{{ item.cliente.nome if item.cliente else "Cliente" }}</p>
+              <p class="item__detalhe">{{ ag.descricao_servicos }}, até {{ ag.fim|hora }}</p>
+              <p class="item__rodape">
+                <span class="selo selo--{{ ag.status }}">{{ ag.status|status_rotulo }}</span>
+                <span class="item__valor">{{ ag.valor_centavos|moeda }}</span>
+              </p>
+              {% if pode(ag.barbeiro_id) %}
+              <div class="item__acoes">
+                {% if ag.status in ['agendado', 'confirmado'] %}
+                  {{ acao(ag, 'concluir', 'Concluir') }}
+                  {% if agora_ >= ag.inicio %}{{ acao(ag, 'faltou', 'Faltou') }}{% endif %}
+                  {{ acao(ag, 'cancelar', 'Cancelar', 'Cancelar o horário de ' ~ (item.cliente.nome if item.cliente else 'cliente') ~ ' às ' ~ (ag.inicio|hora) ~ '? O cliente recebe um aviso.') }}
+                {% elif ag.status in ['concluido', 'nao_compareceu'] %}
+                  {{ acao(ag, 'reabrir', 'Desfazer') }}
+                {% endif %}
+              </div>
+              {% endif %}
+            </div>
+          {% elif item.tipo == 'bloqueio' %}
+            <div class="item__corpo">
+              <p class="item__titulo">{{ item.bloqueio.motivo }}</p>
+              <p class="item__detalhe">até {{ item.fim|hora }}{% if item.bloqueio.barbeiro_id is none %}, barbearia inteira{% endif %}</p>
+              {% if pode(item.bloqueio.barbeiro_id) and item.fim > agora_ %}
+              <form class="item__acoes" method="post" action="{{ url_for('admin.remover_bloqueio', bloqueio_id=item.bloqueio.id) }}"
+                    hx-post="{{ url_for('admin.remover_bloqueio', bloqueio_id=item.bloqueio.id) }}" hx-target="#quadro" hx-swap="outerHTML">
+                {{ csrf() }}<button class="mini" type="submit">Liberar</button>
+              </form>
+              {% endif %}
+            </div>
+          {% else %}
+            <div class="item__corpo">
+              <p class="item__titulo">{% if not item.passado %}Livre{% endif %}</p>
+              {% if not item.passado and pode(b.id) %}
+              <form class="item__acoes" method="post" action="{{ url_for('admin.bloqueio_rapido') }}"
+                    hx-post="{{ url_for('admin.bloqueio_rapido') }}" hx-target="#quadro" hx-swap="outerHTML">
+                {{ csrf() }}
+                <input type="hidden" name="barbeiro_id" value="{{ b.id }}">
+                <input type="hidden" name="inicio" value="{{ item.inicio.isoformat(timespec='minutes') }}">
+                <input type="hidden" name="minutos" value="{{ item.minutos }}">
+                <button class="mini mini--bloquear" type="submit" aria-label="Bloquear {{ item.inicio|hora }} de {{ b.nome }}">Bloquear</button>
+              </form>
+              {% endif %}
+            </div>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ol>
+    </section>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>

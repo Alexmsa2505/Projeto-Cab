@@ -1,0 +1,3 @@
+{# Resposta do HTMX: horários vão para #horarios e o resumo é trocado fora da área (out-of-band) #}
+{% include "cliente/_horarios.html" %}
+<div id="resumo" class="resumo" hx-swap-oob="true">{% include "cliente/_resumo.html" %}</div>

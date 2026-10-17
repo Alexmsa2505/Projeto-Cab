@@ -1,0 +1,67 @@
+{% extends "admin/base.html" %}
+{% from "_macros.html" import csrf %}
+{% block titulo_pagina %}Bloqueios{% endblock %}
+{% block conteudo %}
+<header class="cabecalho">
+  <div>
+    <h1 class="cabecalho__titulo">Bloqueios</h1>
+    <p class="cabecalho__sub">Almoço, pausa ou imprevisto: o horário bloqueado some da página de agendamento na hora.</p>
+  </div>
+</header>
+
+<div class="grade-2">
+  <section class="painel-bloco" aria-labelledby="t-novo">
+    <h2 class="bloco__titulo" id="t-novo">Bloquear horário</h2>
+    {% if erro %}<p class="alerta alerta--erro" role="alert">{{ erro }}</p>{% endif %}
+    <div class="atalhos">
+      <button type="button" class="chip" data-atalho="almoco">Almoço, 12:00 às 13:00</button>
+      <button type="button" class="chip" data-atalho="pausa">Pausa de 15 min agora</button>
+      <button type="button" class="chip" data-atalho="imprevisto">Imprevisto, próxima 1 hora</button>
+      <button type="button" class="chip" data-atalho="dia" data-abre="{{ barbearia.abre_as|hora }}" data-fecha="{{ barbearia.fecha_as|hora }}">Dia inteiro</button>
+    </div>
+    <form method="post" class="formulario" id="form-bloqueio">
+      {{ csrf() }}
+      <label class="campo"><span>Profissional</span>
+        <select name="barbeiro_id" required>
+          {% for b in barbeiros %}
+          <option value="{{ b.id }}" {% if valores.get('barbeiro_id') == b.id|string or (not valores and usuario.barbeiro_id == b.id) %}selected{% endif %}>{{ b.nome }}</option>
+          {% endfor %}
+          {% if usuario.e_dono %}<option value="todos" {% if valores.get('barbeiro_id') == 'todos' %}selected{% endif %}>Barbearia inteira</option>{% endif %}
+        </select></label>
+      <div class="campos-linha">
+        <label class="campo"><span>Dia</span>
+          <input type="date" name="data" required min="{{ hoje.isoformat() }}" value="{{ valores.get('data') or hoje.isoformat() }}"></label>
+        <label class="campo"><span>Das</span><input type="time" name="inicio" required step="300" value="{{ valores.get('inicio', '') }}"></label>
+        <label class="campo"><span>Até</span><input type="time" name="fim" required step="300" value="{{ valores.get('fim', '') }}"></label>
+      </div>
+      <label class="campo"><span>Motivo</span>
+        <input name="motivo" list="motivos" maxlength="60" placeholder="Almoço, pausa, imprevisto…" value="{{ valores.get('motivo', '') }}">
+        <datalist id="motivos">{% for m in motivos %}<option value="{{ m }}">{% endfor %}</datalist></label>
+      <div><button class="botao botao--primario" type="submit">Bloquear horário</button></div>
+    </form>
+  </section>
+
+  <section class="painel-bloco" aria-labelledby="t-proximos">
+    <h2 class="bloco__titulo" id="t-proximos">Próximos bloqueios</h2>
+    {% if not por_dia %}<p class="vazio-texto">Nenhum horário bloqueado nos próximos 60 dias.</p>{% endif %}
+    {% for dia, itens in por_dia.items() %}
+    <h3 class="dia-titulo">{{ dia|data_extensa|capitalize }}</h3>
+    <ul class="lista-bloqueios" role="list">
+      {% for bl in itens %}
+      <li>
+        <span class="faixa-polo" aria-hidden="true"></span>
+        <span class="lista-bloqueios__hora">{{ bl.inicio|hora }} às {{ bl.fim|hora }}</span>
+        <span class="lista-bloqueios__quem">{{ nomes.get(bl.barbeiro_id, "Profissional removido") if bl.barbeiro_id else "Barbearia inteira" }}<small>{{ bl.motivo }}</small></span>
+        {% if pode(bl.barbeiro_id) %}
+        <form method="post" action="{{ url_for('admin.remover_bloqueio', bloqueio_id=bl.id) }}">
+          {{ csrf() }}<input type="hidden" name="voltar" value="bloqueios">
+          <button class="mini" type="submit">Liberar</button>
+        </form>
+        {% else %}<span></span>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endfor %}
+  </section>
+</div>
+{% endblock %}

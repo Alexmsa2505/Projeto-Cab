@@ -1,0 +1,15 @@
+# Code Wave — Sistema de Agendamento para Barbearias
+# Python 3.10 ou superior
+
+Flask>=3.0,<4.0          # web (equivalente ao Laravel)
+python-dotenv>=1.0       # lê o arquivo .env
+segno>=1.6               # gera o QR Code (SVG e PNG, sem dependências)
+tzdata>=2024.1           # fusos horários (necessário no Windows)
+
+# Desenvolvimento / testes
+pytest>=8.0
+
+# Quando o banco de dados entrar (veja README e database/schema.sql):
+# SQLAlchemy>=2.0
+# psycopg[binary]>=3.1
+# alembic>=1.13

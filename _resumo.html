@@ -1,0 +1,14 @@
+<div class="resumo__conta">
+  <span class="resumo__total">{{ selecao.total_centavos|moeda }}</span>
+  <span class="resumo__detalhe">
+    {%- if selecao.servicos -%}
+      {{ selecao.servicos|length }} {{ "serviço" if selecao.servicos|length == 1 else "serviços" }}, {{ selecao.duracao_minutos|duracao }}
+    {%- else -%}
+      Escolha pelo menos um serviço
+    {%- endif -%}
+  </span>
+  {% if horario_escolhido %}
+  <span class="resumo__quando">{{ horario_escolhido|data_curta|capitalize }} às {{ horario_escolhido|hora }}{% if selecao.barbeiro %} com {{ selecao.barbeiro.primeiro_nome }}{% endif %}</span>
+  {% endif %}
+</div>
+<button class="botao botao--marca" type="submit">{{ "Confirmar horário" if telefone_verificado else "Receber código" }}</button>
